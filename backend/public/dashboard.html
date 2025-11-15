@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Portfolio Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header h1 { color: #333; font-size: 28px; }
+        .user-info { display: flex; gap: 15px; align-items: center; }
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .refresh-btn:hover { background: #218838; }
+        .logout-btn {
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .wallets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .wallet-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .wallet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .wallet-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+        .wallet-type {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .delete-wallet {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .holdings-list { margin-bottom: 20px; }
+        .holding-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .holding-info { flex: 1; }
+        .holding-symbol {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        .holding-amount {
+            color: #666;
+            font-size: 14px;
+        }
+        .holding-value {
+            text-align: right;
+            margin-right: 15px;
+        }
+        .value-usd {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 16px;
+        }
+        .value-eur {
+            color: #666;
+            font-size: 12px;
+        }
+        .delete-holding {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .add-holding-form {
+            border-top: 2px solid #f0f0f0;
+            padding-top: 15px;
+        }
+        .add-holding-form input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .add-holding-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .add-wallet-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .add-wallet-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .last-update {
+            color: #999;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>💼 Mon Portfolio Crypto</h1>
+                <span class="last-update" id="lastUpdate"></span>
+            </div>
+            <div class="user-info">
+                <button class="refresh-btn" onclick="manualRefresh()">🔄 Actualiser</button>
+                <span id="userName" style="color: #666; font-weight: 500;">Chargement...</span>
+                <button class="logout-btn" onclick="logout()">Déconnexion</button>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">💰 Valeur Totale (USD)</div>
+                <div class="stat-value" id="totalUSD">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💶 Valeur Totale (EUR)</div>
+                <div class="stat-value" id="totalEUR">€0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">👛 Nombre de Wallets</div>
+                <div class="stat-value" id="walletCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🪙 Nombre de Coins</div>
+                <div class="stat-value" id="coinCount">0</div>
+            </div>
+        </div>
+
+        <div class="add-wallet-section">
+            <h3>➕ Ajouter un Wallet</h3>
+            <form onsubmit="addWallet(event)" id="walletForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom du wallet</label>
+                        <input type="text" id="walletName" required placeholder="Ex: Wallet Principal">
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <input type="text" id="walletType" required placeholder="Ex: TG, BR, MetaMask">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Créer le wallet</button>
+            </form>
+        </div>
+
+        <div id="walletsGrid" class="wallets-grid"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = '/index.html';
+        }
+
+        let walletsData = [];
+        let portfolioData = {};
+        let isRefreshing = false;
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userName').textContent = user.name || user.email;
+                } else {
+                    logout();
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        }
+
+        async function loadPortfolio() {
+            if (isRefreshing) return; // Éviter les refresh simultanés
+            
+            isRefreshing = true;
+            try {
+                const response = await fetch(`${API_URL}/portfolio`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    portfolioData = await response.json();
+                    updateStats();
+                    await loadWallets();
+                    updateLastRefreshTime();
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        function updateLastRefreshTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('fr-FR');
+            document.getElementById('lastUpdate').textContent = `Mis à jour à ${timeStr}`;
+        }
+
+        function updateStats() {
+            document.getElementById('totalUSD').textContent = `$${portfolioData.totals.usd}`;
+            document.getElementById('totalEUR').textContent = `€${portfolioData.totals.eur}`;
+            
+            const wallets = new Set(portfolioData.holdings.map(h => h.wallet_id).filter(Boolean));
+            const coins = new Set(portfolioData.holdings.map(h => h.coin_symbol).filter(Boolean));
+            
+            document.getElementById('walletCount').textContent = wallets.size;
+            document.getElementById('coinCount').textContent = coins.size;
+        }
+
+        async function loadWallets() {
+            try {
+                const response = await fetch(`${API_URL}/wallets`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    walletsData = await response.json();
+                    displayWallets();
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        }
+
+        async function displayWallets() {
+            const grid = document.getElementById('walletsGrid');
+            
+            if (walletsData.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h3>Aucun wallet</h3><p>Créez votre premier wallet ci-dessus</p></div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+
+            for (const wallet of walletsData) {
+                const holdings = await loadHoldings(wallet.wallet_id);
+                const card = createWalletCard(wallet, holdings);
+                grid.appendChild(card);
+            }
+        }
+
+        async function loadHoldings(walletId) {
+            try {
+                const response = await fetch(`${API_URL}/wallets/${walletId}/holdings`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                }
+                return [];
+            } catch (error) {
+                console.error('Erreur:', error);
+                return [];
+            }
+        }
+
+        function createWalletCard(wallet, holdings) {
+            const card = document.createElement('div');
+            card.className = 'wallet-card';
+
+            let holdingsHTML = holdings.length > 0 ? holdings.map(h => `
+                <div class="holding-item">
+                    <div class="holding-info">
+                        <div class="holding-symbol">${h.coin_symbol}</div>
+                        <div class="holding-amount">${parseFloat(h.amount).toFixed(8)} ${h.coin_symbol}</div>
+                        <div style="color: #999; font-size: 12px;">${h.network}</div>
+                    </div>
+                    <div class="holding-value">
+                        <div class="value-usd">$${parseFloat(h.value_usd || 0).toFixed(2)}</div>
+                        <div class="value-eur">€${parseFloat(h.value_eur || 0).toFixed(2)}</div>
+                    </div>
+                    <button class="delete-holding" onclick="deleteHolding(${wallet.wallet_id}, ${h.holding_id})">×</button>
+                </div>
+            `).join('') : '<p style="color: #999; padding: 20px 0; text-align: center;">Aucun coin</p>';
+
+            card.innerHTML = `
+                <div class="wallet-header">
+                    <div>
+                        <h3>${wallet.wallet_name}</h3>
+                        <span class="wallet-type">${wallet.wallet_type}</span>
+                    </div>
+                    <button class="delete-wallet" onclick="deleteWallet(${wallet.wallet_id})">Supprimer</button>
+                </div>
+                <div class="holdings-list">
+                    ${holdingsHTML}
+                </div>
+                <div class="add-holding-form">
+                    <form onsubmit="addHolding(event, ${wallet.wallet_id})">
+                        <input type="text" placeholder="Symbole (BTC, ETH...)" required name="symbol" autocomplete="off">
+                        <input type="number" step="any" placeholder="Montant" required name="amount" autocomplete="off">
+                        <input type="text" placeholder="Network (optionnel)" name="network" autocomplete="off">
+                        <button type="submit" class="btn">Ajouter coin</button>
+                    </form>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function addWallet(event) {
+            event.preventDefault();
+            const name = document.getElementById('walletName').value;
+            const type = document.getElementById('walletType').value;
+
+            try {
+                const response = await fetch(`${API_URL}/wallets`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, type })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('walletName').value = '';
+                    document.getElementById('walletType').value = '';
+                    showMessage('✅ Wallet créé avec succès', 'success');
+                    await loadPortfolio();
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erreur de connexion', 'error');
+            }
+        }
+
+        async function deleteWallet(walletId) {
+            if (!confirm('Supprimer ce wallet et tous ses coins ?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/wallets/${walletId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Wallet supprimé', 'success');
+                    await loadPortfolio();
+                }
+            } catch (error) {
+                showMessage('❌ Erreur', 'error');
+            }
+        }
+
+        async function addHolding(event, walletId) {
+            event.preventDefault();
+            const form = event.target;
+            const symbol = form.symbol.value.toUpperCase();
+            const amount = parseFloat(form.amount.value);
+            const network = form.network.value || 'default';
+
+            try {
+                const response = await fetch(`${API_URL}/wallets/${walletId}/holdings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ coin_symbol: symbol, amount, network })
+                });
+
+                if (response.ok) {
+                    form.reset();
+                    showMessage('✅ Coin ajouté', 'success');
+                    await loadPortfolio();
+                } else {
+                    const data = await response.json();
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erreur', 'error');
+            }
+        }
+
+        async function deleteHolding(walletId, holdingId) {
+            if (!confirm('Supprimer ce coin ?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/wallets/${walletId}/holdings/${holdingId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Coin supprimé', 'success');
+                    await loadPortfolio();
+                }
+            } catch (error) {
+                showMessage('❌ Erreur', 'error');
+            }
+        }
+
+        function manualRefresh() {
+            showMessage('🔄 Actualisation...', 'success');
+            loadPortfolio();
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/index.html';
+        }
+
+        // Chargement initial
+        loadUserInfo();
+        loadPortfolio();
+
+        // PAS de setInterval - refresh manuel uniquement via le bouton
+    </script>
+</body>
+</html>
